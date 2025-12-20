@@ -1,6 +1,7 @@
 const std = @import("std");
 
 const day1 = @import("day1.zig");
+const day2 = @import("day2.zig");
 
 const Day = struct {
     number: u32,
@@ -10,6 +11,7 @@ const Day = struct {
 
 const days = [_]Day{
     .{ .number = 1, .part1_fn = day1.part1, .part2_fn = day1.part2 },
+    .{ .number = 2, .part1_fn = day2.part1, .part2_fn = day2.part2 },
 };
 
 fn runPart(allocator: std.mem.Allocator, day: u32, part: u32, use_sample: bool, part_fn: *const fn (std.mem.Allocator, []const u8) anyerror![]const u8) !void {

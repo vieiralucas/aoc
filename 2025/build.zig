@@ -25,15 +25,23 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-        }),
-    });
-
-    const run_exe_tests = b.addRunArtifact(exe_tests);
-
     const test_step = b.step("test", "Run tests");
-    test_step.dependOn(&run_exe_tests.step);
+
+    const test_files = [_][]const u8{
+        "src/main.zig",
+        "src/day1.zig",
+        "src/day2.zig",
+    };
+
+    for (test_files) |test_file| {
+        const tests = b.addTest(.{
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(test_file),
+                .target = target,
+            }),
+        });
+
+        const run_tests = b.addRunArtifact(tests);
+        test_step.dependOn(&run_tests.step);
+    }
 }
