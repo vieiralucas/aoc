@@ -1,5 +1,6 @@
 (library
  (name aoc2016)
  (wrapped true)
+ (flags (:standard -w +a))
  (preprocess
   (pps ppx_deriving.show)))

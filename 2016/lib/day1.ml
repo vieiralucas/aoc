@@ -1,7 +1,5 @@
 type direction = N | S | E | W [@@deriving show]
 
-let dir_c = function N -> "N" | S -> "S" | E -> "E" | W -> "W"
-
 type turn = R | L [@@deriving show]
 
 let turn dir turn =
@@ -66,9 +64,6 @@ module PosSet = Set.Make (struct
 
   let compare = compare
 end)
-
-let show_pos_set s =
-  PosSet.elements s |> List.map show_pos |> String.concat "; " |> Printf.sprintf "{ %s }"
 
 let part2 (input : string) : string =
   let init = { pos = (0, 0); dir = N } in
