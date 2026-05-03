@@ -22,18 +22,22 @@ type state = { pos : pos; dir : direction } [@@deriving show]
 let get_deltas dir =
   match dir with N -> (0, 1) | S -> (0, -1) | E -> (1, 0) | W -> (-1, 0)
 
-let walk_step state dir instruction =
+let step_one state =
+  let dx, dy = get_deltas state.dir in
   let x, y = state.pos in
-  let dx, dy = get_deltas dir in
-  ({ pos = (x + dx, y + dy); dir }, { instruction with steps = instruction.steps - 1 })
+  { state with pos = (x + dx, y + dy) }
 
-let walk state instruction =
-  let dir = turn state.dir instruction.turn in
-  let rec inner state instruction =
-    let state, instruction = walk_step state dir instruction in
-    if instruction.steps == 0 then state else inner state instruction
-  in
-  inner state instruction
+let rec walk_blocks state = function
+  | [] -> Seq.empty
+  | instr :: rest ->
+      let state = { state with dir = turn state.dir instr.turn } in
+      let rec advance state n () =
+        if n = 0 then walk_blocks state rest ()
+        else
+          let state = step_one state in
+          Seq.Cons (state, advance state (n - 1))
+      in
+      advance state instr.steps
 
 let parse_instruction str =
   let str = String.trim str in
@@ -47,13 +51,15 @@ let parse_instruction str =
   | c -> failwith (Printf.sprintf "unknown turn: %c" c)
 
 let parse_input line = String.split_on_char ',' line |> List.map parse_instruction
-let lin_distance (x1, y1) (x2, y2) = abs x1 - x2 + (abs y1 - y2)
+let lin_distance (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
 
 let part1 (input : string) : string =
   let instructions = parse_input input in
-  let initial_state = { pos = (0, 0); dir = N } in
-  let final_state = List.fold_left walk initial_state instructions in
-  string_of_int (lin_distance final_state.pos initial_state.pos)
+  let init = { pos = (0, 0); dir = N } in
+  let blocks = walk_blocks init instructions in
+  let final = Seq.fold_left (fun _ s -> s) init blocks in
+  let distance = lin_distance init.pos final.pos in
+  string_of_int distance
 
 module PosSet = Set.Make (struct
   type t = pos
@@ -65,24 +71,14 @@ let show_pos_set s =
   PosSet.elements s |> List.map show_pos |> String.concat "; " |> Printf.sprintf "{ %s }"
 
 let part2 (input : string) : string =
-  let rec walk_part2 visited state = function
-    | [] -> state.pos
-    | instruction :: rest ->
-        let prev_dir = state.dir in
-        let dir = turn state.dir instruction.turn in
-        let state, instruction = walk_step state dir instruction in
-        if PosSet.mem state.pos visited then state.pos
-        else
-          let visited = PosSet.add state.pos visited in
-          let instructions =
-            if instruction.steps == 0 then rest else instruction :: rest
-          in
-          let state =
-            if instruction.steps == 0 then state else { state with dir = prev_dir }
-          in
-          walk_part2 visited state instructions
+  let init = { pos = (0, 0); dir = N } in
+  let rec find visited seq =
+    match seq () with
+    | Seq.Nil -> None
+    | Seq.Cons (s, rest) ->
+        if PosSet.mem s.pos visited then Some s.pos
+        else find (PosSet.add s.pos visited) rest
   in
-  let initial_state = { pos = (0, 0); dir = N } in
-  let instructions = parse_input input in
-  let hq = walk_part2 PosSet.empty initial_state instructions in
-  string_of_int (lin_distance hq initial_state.pos)
+  match find (PosSet.singleton init.pos) (walk_blocks init (parse_input input)) with
+  | Some p -> string_of_int (lin_distance init.pos p)
+  | None -> failwith "no revisit"
