@@ -1,0 +1,5 @@
+(library
+ (name aoc2016)
+ (wrapped true)
+ (preprocess
+  (pps ppx_deriving.show)))

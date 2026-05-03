@@ -1,0 +1,3 @@
+_build/
+inputs/day*_actual.txt
+.DS_Store
