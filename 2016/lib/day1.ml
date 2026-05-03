@@ -22,11 +22,18 @@ type state = { pos : pos; dir : direction } [@@deriving show]
 let get_deltas dir =
   match dir with N -> (0, 1) | S -> (0, -1) | E -> (1, 0) | W -> (-1, 0)
 
-let walk state instruction =
+let walk_step state dir instruction =
   let x, y = state.pos in
-  let dir = turn state.dir instruction.turn in
   let dx, dy = get_deltas dir in
-  { pos = (x + (dx * instruction.steps), y + (dy * instruction.steps)); dir }
+  ({ pos = (x + dx, y + dy); dir }, { instruction with steps = instruction.steps - 1 })
+
+let walk state instruction =
+  let dir = turn state.dir instruction.turn in
+  let rec inner state instruction =
+    let state, instruction = walk_step state dir instruction in
+    if instruction.steps == 0 then state else inner state instruction
+  in
+  inner state instruction
 
 let parse_instruction str =
   let str = String.trim str in
@@ -48,4 +55,34 @@ let part1 (input : string) : string =
   let final_state = List.fold_left walk initial_state instructions in
   string_of_int (lin_distance final_state.pos initial_state.pos)
 
-let part2 (_input : string) : string = "not implemented"
+module PosSet = Set.Make (struct
+  type t = pos
+
+  let compare = compare
+end)
+
+let show_pos_set s =
+  PosSet.elements s |> List.map show_pos |> String.concat "; " |> Printf.sprintf "{ %s }"
+
+let part2 (input : string) : string =
+  let rec walk_part2 visited state = function
+    | [] -> state.pos
+    | instruction :: rest ->
+        let prev_dir = state.dir in
+        let dir = turn state.dir instruction.turn in
+        let state, instruction = walk_step state dir instruction in
+        if PosSet.mem state.pos visited then state.pos
+        else
+          let visited = PosSet.add state.pos visited in
+          let instructions =
+            if instruction.steps == 0 then rest else instruction :: rest
+          in
+          let state =
+            if instruction.steps == 0 then state else { state with dir = prev_dir }
+          in
+          walk_part2 visited state instructions
+  in
+  let initial_state = { pos = (0, 0); dir = N } in
+  let instructions = parse_input input in
+  let hq = walk_part2 PosSet.empty initial_state instructions in
+  string_of_int (lin_distance hq initial_state.pos)
