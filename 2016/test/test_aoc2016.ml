@@ -20,6 +20,18 @@ let d2p1_case input expected =
 
 let day2_part1 = [ d2p1_case "ULL\nRRDDD\nLURDL\nUUUUD" "1985" ]
 
+let d2p2_case input expected =
+  ( Printf.sprintf "%S -> %s" input expected,
+    `Quick,
+    fun () -> Alcotest.(check string) "" expected (Aoc2016.Day2.part2 input) )
+
+let day2_part2 = [ d2p2_case "ULL\nRRDDD\nLURDL\nUUUUD" "5DB3" ]
+
 let () =
   Alcotest.run "aoc2016"
-    [ ("day1 part1", day1_part1); ("day1 part2", day1_part2); ("day2 part1", day2_part1) ]
+    [
+      ("day1 part1", day1_part1);
+      ("day1 part2", day1_part2);
+      ("day2 part1", day2_part1);
+      ("day2 part2", day2_part2);
+    ]
