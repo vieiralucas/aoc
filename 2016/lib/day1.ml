@@ -1,5 +1,4 @@
 type direction = N | S | E | W [@@deriving show]
-
 type turn = R | L [@@deriving show]
 
 let turn dir turn =
