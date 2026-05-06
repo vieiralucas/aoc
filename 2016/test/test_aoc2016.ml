@@ -27,6 +27,25 @@ let d2p2_case input expected =
 
 let day2_part2 = [ d2p2_case "ULL\nRRDDD\nLURDL\nUUUUD" "5DB3" ]
 
+let d3p1_case input expected =
+  ( Printf.sprintf "%S -> %s" input expected,
+    `Quick,
+    fun () -> Alcotest.(check string) "" expected (Aoc2016.Day3.part1 input) )
+
+let day3_part1 =
+  [ d3p1_case "5 10 25" "0"; d3p1_case "3 4 5" "1"; d3p1_case "5 10 25\n3 4 5" "1" ]
+
+let d3p2_case input expected =
+  ( Printf.sprintf "%S -> %s" input expected,
+    `Quick,
+    fun () -> Alcotest.(check string) "" expected (Aoc2016.Day3.part2 input) )
+
+let day3_part2 =
+  [
+    d3p2_case
+      "101 301 501\n102 302 502\n103 303 503\n201 401 601\n202 402 602\n203 403 603" "6";
+  ]
+
 let () =
   Alcotest.run "aoc2016"
     [
@@ -34,4 +53,6 @@ let () =
       ("day1 part2", day1_part2);
       ("day2 part1", day2_part1);
       ("day2 part2", day2_part2);
+      ("day3 part1", day3_part1);
+      ("day3 part2", day3_part2);
     ]

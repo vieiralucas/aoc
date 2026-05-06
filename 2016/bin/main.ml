@@ -4,6 +4,7 @@ let days =
   [
     { number = 1; part1 = Aoc2016.Day1.part1; part2 = Aoc2016.Day1.part2 };
     { number = 2; part1 = Aoc2016.Day2.part1; part2 = Aoc2016.Day2.part2 };
+    { number = 3; part1 = Aoc2016.Day3.part1; part2 = Aoc2016.Day3.part2 };
   ]
 
 let read_file path =
