@@ -13,7 +13,8 @@ let parse_line (line : string) : instruction list =
   line |> String.trim |> String.to_seq |> Seq.map char_to_instruction |> List.of_seq
 
 let parse_input (input : string) : instruction list list =
-  input |> String.split_on_char '\n'
+  input
+  |> String.split_on_char '\n'
   |> List.filter_map (fun line ->
          let line = String.trim line in
          if String.length line > 0 then Some (parse_line line) else None)
