@@ -46,6 +46,21 @@ let day3_part2 =
       "101 301 501\n102 302 502\n103 303 503\n201 401 601\n202 402 602\n203 403 603" "6";
   ]
 
+let d4p1_case input expected =
+  ( Printf.sprintf "%S -> %s" input expected,
+    `Quick,
+    fun () -> Alcotest.(check string) "" expected (Aoc2016.Day4.part1 input) )
+
+let day4_part1 =
+  [
+    d4p1_case
+      "aaaaa-bbb-z-y-x-123[abxyz]\n\
+       a-b-c-d-e-f-g-h-987[abcde]\n\
+       not-a-real-room-404[oarel]\n\
+       totally-real-room-200[decoy]"
+      "1514";
+  ]
+
 let () =
   Alcotest.run "aoc2016"
     [
@@ -55,4 +70,5 @@ let () =
       ("day2 part2", day2_part2);
       ("day3 part1", day3_part1);
       ("day3 part2", day3_part2);
+      ("day4 part1", day4_part1);
     ]
