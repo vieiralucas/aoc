@@ -1,37 +1,34 @@
-module CharMap = Map.Make (Char)
-
 let parse_line line =
-  let line = String.split_on_char '[' line in
-  let name_and_id = List.take 1 line |> List.hd in
-  let checksum = List.drop 1 line |> List.hd in
-  let checksum = String.sub checksum 0 (String.length checksum - 1) in
-  let name_parts = String.split_on_char '-' name_and_id in
-  let name = List.take (List.length name_parts - 1) name_parts in
-  let id =
-    List.drop (List.length name_parts - 1) name_parts |> List.hd |> int_of_string
-  in
-  (id, (name, checksum))
+  match String.split_on_char '[' line with
+  | [ name_and_id; checksum_bracket ] ->
+      let checksum = String.sub checksum_bracket 0 (String.length checksum_bracket - 1) in
+      let parts = String.split_on_char '-' name_and_id in
+      let id = List.hd (List.rev parts) |> int_of_string in
+      let name = List.rev (List.tl (List.rev parts)) in
+      (name, id, checksum)
+  | _ -> failwith ("bad line: " ^ line)
 
-let checksum_from_counts map =
-  CharMap.to_list map
+let checksum_from_counts counts =
+  Hashtbl.to_seq counts
+  |> List.of_seq
   |> List.sort (fun (c1, n1) (c2, n2) ->
-         let ncomp = compare n1 n2 in
-         if ncomp == 0 then compare c1 c2 else ncomp * -1)
+         match compare n2 n1 with 0 -> compare c1 c2 | n -> n)
   |> List.map fst
   |> List.to_seq
+  |> Seq.take 5
   |> String.of_seq
 
-let count_chars (s : string) : int CharMap.t =
-  String.fold_left
-    (fun acc c ->
-      CharMap.update c (function Some n -> Some (n + 1) | None -> Some 1) acc)
-    CharMap.empty s
+let count_chars s =
+  let counts = Hashtbl.create 26 in
+  String.iter
+    (fun c ->
+      let n = Hashtbl.find_opt counts c |> Option.value ~default:0 in
+      Hashtbl.replace counts c (n + 1))
+    s;
+  counts
 
 let is_valid name checksum =
-  let counts = count_chars (String.concat "" name) in
-  let actual = checksum_from_counts counts in
-  let actual = String.sub actual 0 (String.length checksum) in
-  actual = checksum
+  checksum_from_counts (count_chars (String.concat "" name)) = checksum
 
 let lines str = String.trim str |> String.split_on_char '\n'
 let parse_rooms input = lines input |> List.map parse_line
@@ -39,28 +36,23 @@ let a_code = Char.code 'a'
 let char_range = Char.code 'z' - Char.code 'a' + 1
 
 let shift n c =
-  let starting_code = Char.code c in
-  let normalized = starting_code - a_code in
+  let normalized = Char.code c - a_code in
   ((normalized + n) mod char_range) + a_code |> Char.chr
 
 let decrypt key str = String.map (shift key) str
 let decrypt_parts key hashed = List.map (decrypt key) hashed |> String.concat " "
 
 let part1 input =
-  let result =
-    parse_rooms input
-    |> List.filter (fun (_, (name, checksum)) -> is_valid name checksum)
-    |> List.map fst
-    |> List.fold_left ( + ) 0
-  in
-  string_of_int result
+  parse_rooms input
+  |> List.filter (fun (name, _, checksum) -> is_valid name checksum)
+  |> List.map (fun (_, id, _) -> id)
+  |> List.fold_left ( + ) 0
+  |> string_of_int
 
 let part2 input =
-  let encrypted_rooms = parse_rooms input in
-  let decrypted_rooms =
-    List.map (fun (id, (name, _)) -> (id, decrypt_parts id name)) encrypted_rooms
-  in
-  let answer, _ =
-    List.find (fun (_, name) -> name = "northpole object storage") decrypted_rooms
-  in
-  string_of_int answer
+  parse_rooms input
+  |> List.filter (fun (name, _, checksum) -> is_valid name checksum)
+  |> List.map (fun (name, id, _) -> (id, decrypt_parts id name))
+  |> List.find (fun (_, name) -> name = "northpole object storage")
+  |> fst
+  |> string_of_int
