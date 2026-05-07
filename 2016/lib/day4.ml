@@ -6,8 +6,10 @@ let parse_line line =
   let checksum = List.drop 1 line |> List.hd in
   let checksum = String.sub checksum 0 (String.length checksum - 1) in
   let name_parts = String.split_on_char '-' name_and_id in
-  let name = List.take (List.length name_parts - 1) name_parts |> String.concat "" in
-  let id = List.drop (List.length name_parts - 1) name_parts |> List.hd in
+  let name = List.take (List.length name_parts - 1) name_parts in
+  let id =
+    List.drop (List.length name_parts - 1) name_parts |> List.hd |> int_of_string
+  in
   (id, (name, checksum))
 
 let checksum_from_counts map =
@@ -26,20 +28,39 @@ let count_chars (s : string) : int CharMap.t =
     CharMap.empty s
 
 let is_valid name checksum =
-  let counts = count_chars name in
+  let counts = count_chars (String.concat "" name) in
   let actual = checksum_from_counts counts in
   let actual = String.sub actual 0 (String.length checksum) in
   actual = checksum
 
+let lines str = String.trim str |> String.split_on_char '\n'
+let parse_rooms input = lines input |> List.map parse_line
+let a_code = Char.code 'a'
+let char_range = Char.code 'z' - Char.code 'a' + 1
+
+let shift n c =
+  let starting_code = Char.code c in
+  let normalized = starting_code - a_code in
+  ((normalized + n) mod char_range) + a_code |> Char.chr
+
+let decrypt key str = String.map (shift key) str
+let decrypt_parts key hashed = List.map (decrypt key) hashed |> String.concat " "
+
 let part1 input =
-  let lines = String.trim input |> String.split_on_char '\n' in
   let result =
-    List.map parse_line lines
+    parse_rooms input
     |> List.filter (fun (_, (name, checksum)) -> is_valid name checksum)
     |> List.map fst
-    |> List.map int_of_string
     |> List.fold_left ( + ) 0
   in
   string_of_int result
 
-let part2 _input = "not implemented"
+let part2 input =
+  let encrypted_rooms = parse_rooms input in
+  let decrypted_rooms =
+    List.map (fun (id, (name, _)) -> (id, decrypt_parts id name)) encrypted_rooms
+  in
+  let answer, _ =
+    List.find (fun (_, name) -> name = "northpole object storage") decrypted_rooms
+  in
+  string_of_int answer
