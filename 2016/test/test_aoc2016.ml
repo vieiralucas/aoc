@@ -90,6 +90,13 @@ let day4_part2_shift =
       fun () -> Alcotest.(check char) "" 'b' (Aoc2016.Day4.shift 3 'y') );
   ]
 
+let d5p1_case input expected =
+  ( Printf.sprintf "%S -> %s" input expected,
+    `Quick,
+    fun () -> Alcotest.(check string) "" expected (Aoc2016.Day5.part1 input) )
+
+let day5_part1 = [ d5p1_case "abc" "18f47a30" ]
+
 let () =
   Alcotest.run "aoc2016"
     [
@@ -102,4 +109,5 @@ let () =
       ("day4 part1", day4_part1);
       ("day4 part2 decrypt", day4_part2_decrypt);
       ("day4 part2 shift", day4_part2_shift);
+      ("day5 part1", day5_part1);
     ]

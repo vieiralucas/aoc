@@ -6,6 +6,7 @@ let days =
     { number = 2; part1 = Aoc2016.Day2.part1; part2 = Aoc2016.Day2.part2 };
     { number = 3; part1 = Aoc2016.Day3.part1; part2 = Aoc2016.Day3.part2 };
     { number = 4; part1 = Aoc2016.Day4.part1; part2 = Aoc2016.Day4.part2 };
+    { number = 5; part1 = Aoc2016.Day5.part1; part2 = Aoc2016.Day5.part2 };
   ]
 
 let read_file path =
@@ -14,7 +15,7 @@ let read_file path =
     let n = in_channel_length ic in
     let s = really_input_string ic n in
     close_in ic;
-    Some s
+    Some (String.trim s)
   with Sys_error _ -> None
 
 let run_part day part use_sample fn =
