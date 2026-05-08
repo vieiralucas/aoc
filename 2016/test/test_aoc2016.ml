@@ -97,6 +97,13 @@ let d5p1_case input expected =
 
 let day5_part1 = [ d5p1_case "abc" "18f47a30" ]
 
+let d5p2_case input expected =
+  ( Printf.sprintf "%S -> %s" input expected,
+    `Quick,
+    fun () -> Alcotest.(check string) "" expected (Aoc2016.Day5.part2 input) )
+
+let day5_part2 = [ d5p2_case "abc" "05ace8e3" ]
+
 let () =
   Alcotest.run "aoc2016"
     [
@@ -110,4 +117,5 @@ let () =
       ("day4 part2 decrypt", day4_part2_decrypt);
       ("day4 part2 shift", day4_part2_shift);
       ("day5 part1", day5_part1);
+      ("day5 part2", day5_part2);
     ]
