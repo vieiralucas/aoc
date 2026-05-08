@@ -1,43 +1,44 @@
-let hash id n = Digest.MD5.string (id ^ string_of_int n)
+let md5 id n = Digest.MD5.string (id ^ string_of_int n)
+
+let rec search id n pred =
+  let h = md5 id n in
+  match pred h with Some x -> (x, n) | None -> search id (n + 1) pred
 
 let char_from_hash hash =
   let hex = Digest.to_hex hash in
-  if String.starts_with hex ~prefix:"00000" then Some (String.get hex 5) else None
-
-let rec find_char id n =
-  let hash = hash id n in
-  match char_from_hash hash with Some c -> (c, n) | None -> find_char id (n + 1)
-
-let rec find_password id password n =
-  if String.length password = 8 then password
-  else
-    let c, n = find_char id n in
-    let password = password ^ String.make 1 c in
-    find_password id password (n + 1)
-
-let part1 input = find_password input "" 0
+  if String.starts_with hex ~prefix:"00000" then Some hex.[5] else None
 
 let char_from_hash2 hash =
   let hex = Digest.to_hex hash in
   if String.starts_with hex ~prefix:"00000" then
-    let pos = String.sub hex 5 1 |> int_of_string_opt in
-    match pos with Some p when p < 8 -> Some (p, String.get hex 6) | _ -> None
+    match hex.[5] with
+    | '0' .. '7' as c -> Some (Char.code c - Char.code '0', hex.[6])
+    | _ -> None
   else None
 
-let rec find_char2 id n =
-  let hash = hash id n in
-  match char_from_hash2 hash with
-  | Some (p, c) -> (p, c, n)
-  | None -> find_char2 id (n + 1)
+let rec update_at p c = function
+  | [] -> ([], false)
+  | x :: xs when p = 0 && x = '_' -> (c :: xs, true)
+  | x :: xs ->
+      let xs', did_write = update_at (p - 1) c xs in
+      (x :: xs', did_write)
 
-let rec find_password2 id password n =
-  let is_complete = List.find_opt (fun c -> c = '_') password |> Option.is_none in
-  if is_complete then List.to_seq password |> String.of_seq
-  else
-    let p, c, n = find_char2 id n in
-    let password =
-      List.mapi (fun i curr -> if i = p && curr = '_' then c else curr) password
-    in
-    find_password2 id password (n + 1)
+let part1 input =
+  let rec loop acc count n =
+    if count = 8 then List.rev acc |> List.to_seq |> String.of_seq
+    else
+      let c, n = search input n char_from_hash in
+      loop (c :: acc) (count + 1) (n + 1)
+  in
+  loop [] 0 0
 
-let part2 input = find_password2 input (List.init 8 (Fun.const '_')) 0
+let part2 input =
+  let rec loop password filled n =
+    if filled = 8 then List.to_seq password |> String.of_seq
+    else
+      let (p, c), n = search input n char_from_hash2 in
+      let password', did_write = update_at p c password in
+      let filled' = if did_write then filled + 1 else filled in
+      loop password' filled' (n + 1)
+  in
+  loop (List.init 8 (Fun.const '_')) 0 0
